@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import {
   Wallet,
   TrendingUp,
@@ -7,6 +7,7 @@ import {
   Clock,
   RefreshCw,
 } from "lucide-react";
+import { YieldFlowCanvas } from "../visualizations";
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -150,6 +151,14 @@ export default function PortfolioDashboard({ walletAddress }: PortfolioDashboard
           <p className="text-2xl font-bold">{avgApy.toFixed(1)}%</p>
         </div>
       </div>
+
+      <Suspense
+        fallback={
+          <div className="glass-card animate-pulse" style={{ height: 400 }} />
+        }
+      >
+        <YieldFlowCanvas scene="portfolio" positions={positions} />
+      </Suspense>
 
       {/* Positions Table */}
       <div className="glass-panel p-6">
