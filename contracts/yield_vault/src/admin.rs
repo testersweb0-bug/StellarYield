@@ -20,13 +20,15 @@ impl YieldVault {
         Ok(())
     }
 
-    /// Emergency function to rescue tokens stuck in the contract.
-    /// Admin-only. Can be used to retrieve non-core tokens or adjust balance.
+    /// Rescue tokens sent to the contract by mistake.
     ///
     /// # Arguments
-    /// * `admin` - Current admin address.
-    /// * `target` - Recipient of rescued funds.
-    /// * `amount` - Amount to rescue.
+    /// * `admin`  - The admin address authorizing the rescue.
+    /// * `target` - The address to receive the rescued funds.
+    /// * `amount` - The amount of tokens to rescue.
+    ///
+    /// # Security
+    /// Only the admin can call this. Clamped to actual available balance.
     pub fn rescue_funds(
         env: Env,
         admin: Address,
