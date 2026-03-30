@@ -41,6 +41,7 @@ mod fees;
 mod flashloan;
 mod keeper;
 mod oracle;
+mod referrals;
 mod verification;
 
 // ── Errors ──────────────────────────────────────────────────────────────
@@ -645,68 +646,60 @@ impl YieldVault {
         Self::max_flash_amount(&env)
     }
 
-    /// Preview the number of assets that would be returned for withdrawing shares.
-    pub fn preview_withdraw(env: Env, shares: i128) -> Result<i128, VaultError> {
-        Self::require_init(&env)?;
-        if shares <= 0 {
-            return Err(VaultError::ZeroAmount);
-        }
-        let total_shares: i128 = env
-            .storage()
-            .instance()
-            .get(&DataKey::TotalShares)
-            .unwrap_or(0);
-        if total_shares == 0 {
-            return Err(VaultError::ZeroSupply);
-        }
-        let total_assets: i128 = env
-            .storage()
-            .instance()
-            .get(&DataKey::TotalAssets)
-            .unwrap_or(0);
-        Ok((shares * total_assets) / total_shares)
+    // ── Referral System ─────────────────────────────────────────────
+
+    /// Register a referral relationship.
+    pub fn register_referral(
+        env: Env,
+        referee: Address,
+        referrer: Address,
+    ) -> Result<(), VaultError> {
+        Self::register_referral_impl(env, referee, referrer)
     }
 
-    /// Preview the number of shares needed to withdraw a specific asset amount.
-    pub fn preview_redeem(env: Env, assets: i128) -> Result<i128, VaultError> {
-        Self::require_init(&env)?;
-        if assets <= 0 {
-            return Err(VaultError::ZeroAmount);
-        }
-        let total_shares: i128 = env
-            .storage()
-            .instance()
-            .get(&DataKey::TotalShares)
-            .unwrap_or(0);
-        let total_assets: i128 = env
-            .storage()
-            .instance()
-            .get(&DataKey::TotalAssets)
-            .unwrap_or(0);
-        if total_shares == 0 || total_assets == 0 {
-            return Ok(assets);
-        }
-        let numerator = assets * total_shares;
-        Ok((numerator + total_assets - 1) / total_assets)
+    /// Deposit with an optional referrer.
+    pub fn deposit_with_referral(
+        env: Env,
+        from: Address,
+        amount: i128,
+        referrer: Address,
+    ) -> Result<i128, VaultError> {
+        Self::deposit_with_referral_impl(env, from, amount, referrer)
     }
 
-    /// Get the price per share in asset terms (1e18 scale).
-    pub fn share_price(env: Env) -> Result<i128, VaultError> {
-        Self::require_init(&env)?;
-        let total_shares: i128 = env
-            .storage()
-            .instance()
-            .get(&DataKey::TotalShares)
-            .unwrap_or(0);
-        if total_shares == 0 {
-            return Ok(1_000_000_000_000_000_000i128);
-        }
-        let total_assets: i128 = env
-            .storage()
-            .instance()
-            .get(&DataKey::TotalAssets)
-            .unwrap_or(0);
-        Ok((total_assets * 1_000_000_000_000_000_000i128) / total_shares)
+    /// Claim accumulated referral rewards.
+    pub fn claim_referral_rewards(env: Env, referrer: Address) -> Result<i128, VaultError> {
+        Self::claim_referral_rewards_impl(env, referrer)
+    }
+
+    /// Set referral fee (admin only).
+    pub fn set_referral_fee(env: Env, admin: Address, fee_bps: i128) -> Result<(), VaultError> {
+        Self::set_referral_fee_impl(env, admin, fee_bps)
+    }
+
+    /// Get referrer for a given address.
+    pub fn get_referrer(env: Env, referee: Address) -> Option<Address> {
+        Self::get_referrer_view(env, referee)
+    }
+
+    /// Get referred TVL for a referrer.
+    pub fn get_referred_tvl(env: Env, referrer: Address) -> i128 {
+        Self::get_referred_tvl_view(env, referrer)
+    }
+
+    /// Get unclaimed referral rewards.
+    pub fn get_referral_rewards(env: Env, referrer: Address) -> i128 {
+        Self::get_referral_rewards_view(env, referrer)
+    }
+
+    /// Get referral fee in basis points.
+    pub fn get_referral_fee_bps(env: Env) -> i128 {
+        Self::get_referral_fee_bps_view(env)
+    }
+
+    /// Get total referral rewards distributed.
+    pub fn get_total_referral_rewards(env: Env) -> i128 {
+        Self::get_total_referral_rewards_view(env)
     }
 
     // ── Internal ────────────────────────────────────────────────────
@@ -1069,6 +1062,219 @@ mod tests {
         let (env, client, _, _, _) = setup_env();
         let unknown = Address::generate(&env);
         assert_eq!(client.get_shares(&unknown), 0);
+    }
+
+    // ── Referral Tests ───────────────────────────────────────────────
+
+    #[test]
+    fn test_register_referral() {
+        let (env, client, _, _, _) = setup_env();
+        let referee = Address::generate(&env);
+        let referrer = Address::generate(&env);
+
+        client.register_referral(&referee, &referrer);
+
+        assert_eq!(client.get_referrer(&referee), Some(referrer));
+    }
+
+    #[test]
+    fn test_register_referral_self_referral_fails() {
+        let (env, client, _, _, _) = setup_env();
+        let user = Address::generate(&env);
+
+        let result = client.try_register_referral(&user, &user);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_register_referral_first_referrer_wins() {
+        let (env, client, _, _, _) = setup_env();
+        let referee = Address::generate(&env);
+        let referrer1 = Address::generate(&env);
+        let referrer2 = Address::generate(&env);
+
+        client.register_referral(&referee, &referrer1);
+        client.register_referral(&referee, &referrer2);
+
+        // First referrer should stick
+        assert_eq!(client.get_referrer(&referee), Some(referrer1));
+    }
+
+    #[test]
+    fn test_deposit_with_referral() {
+        let (env, client, _, token_addr, token_admin) = setup_env();
+        let user = Address::generate(&env);
+        let referrer = Address::generate(&env);
+
+        mint_tokens(&env, &token_addr, &token_admin, &user, 1000);
+
+        let shares = client.deposit_with_referral(&user, &1000, &referrer);
+        assert_eq!(shares, 1000);
+        assert_eq!(client.get_referrer(&user), Some(referrer.clone()));
+        assert_eq!(client.get_referred_tvl(&referrer), 1000);
+    }
+
+    #[test]
+    fn test_deposit_with_referral_self_skips_referral() {
+        let (env, client, _, token_addr, token_admin) = setup_env();
+        let user = Address::generate(&env);
+
+        mint_tokens(&env, &token_addr, &token_admin, &user, 1000);
+
+        let shares = client.deposit_with_referral(&user, &1000, &user);
+        assert_eq!(shares, 1000);
+        assert_eq!(client.get_referrer(&user), None);
+        assert_eq!(client.get_referred_tvl(&user), 0);
+    }
+
+    #[test]
+    fn test_deposit_with_referral_accumulates_tvl() {
+        let (env, client, _, token_addr, token_admin) = setup_env();
+        let user1 = Address::generate(&env);
+        let user2 = Address::generate(&env);
+        let referrer = Address::generate(&env);
+
+        mint_tokens(&env, &token_addr, &token_admin, &user1, 500);
+        mint_tokens(&env, &token_addr, &token_admin, &user2, 700);
+
+        client.deposit_with_referral(&user1, &500, &referrer);
+        client.deposit_with_referral(&user2, &700, &referrer);
+
+        assert_eq!(client.get_referred_tvl(&referrer), 1200);
+    }
+
+    #[test]
+    fn test_accrue_referral_reward() {
+        let (env, client, _, _, _) = setup_env();
+        let referee = Address::generate(&env);
+        let referrer = Address::generate(&env);
+
+        client.register_referral(&referee, &referrer);
+
+        // Simulate accrual within contract context
+        let contract_id = client.address.clone();
+        env.as_contract(&contract_id, || {
+            YieldVault::accrue_referral_reward(&env, &referee, 10_000);
+        });
+
+        assert_eq!(client.get_referral_rewards(&referrer), 500);
+        assert_eq!(client.get_total_referral_rewards(), 500);
+    }
+
+    #[test]
+    fn test_accrue_referral_reward_no_referrer() {
+        let (env, client, _, _, _) = setup_env();
+        let user = Address::generate(&env);
+
+        let contract_id = client.address.clone();
+        env.as_contract(&contract_id, || {
+            YieldVault::accrue_referral_reward(&env, &user, 10_000);
+        });
+
+        assert_eq!(client.get_total_referral_rewards(), 0);
+    }
+
+    #[test]
+    fn test_accrue_referral_reward_zero_fee() {
+        let (env, client, _, _, _) = setup_env();
+        let referee = Address::generate(&env);
+        let referrer = Address::generate(&env);
+
+        client.register_referral(&referee, &referrer);
+
+        let contract_id = client.address.clone();
+        env.as_contract(&contract_id, || {
+            YieldVault::accrue_referral_reward(&env, &referee, 0);
+        });
+
+        assert_eq!(client.get_referral_rewards(&referrer), 0);
+    }
+
+    #[test]
+    fn test_claim_referral_rewards() {
+        let (env, client, _, token_addr, token_admin) = setup_env();
+        let referee = Address::generate(&env);
+        let referrer = Address::generate(&env);
+
+        // Register referral
+        client.register_referral(&referee, &referrer);
+
+        // Accrue some rewards within contract context
+        let contract_id = client.address.clone();
+        env.as_contract(&contract_id, || {
+            YieldVault::accrue_referral_reward(&env, &referee, 10_000);
+        });
+        assert_eq!(client.get_referral_rewards(&referrer), 500);
+
+        // Mint tokens to the contract so it can pay out
+        mint_tokens(&env, &token_addr, &token_admin, &contract_id, 1000);
+
+        // Claim
+        let claimed = client.claim_referral_rewards(&referrer);
+        assert_eq!(claimed, 500);
+        assert_eq!(client.get_referral_rewards(&referrer), 0);
+    }
+
+    #[test]
+    fn test_claim_referral_rewards_zero_fails() {
+        let (env, client, _, _, _) = setup_env();
+        let referrer = Address::generate(&env);
+
+        let result = client.try_claim_referral_rewards(&referrer);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_set_referral_fee() {
+        let (_, client, admin, _, _) = setup_env();
+
+        client.set_referral_fee(&admin, &800);
+        assert_eq!(client.get_referral_fee_bps(), 800);
+    }
+
+    #[test]
+    fn test_set_referral_fee_clamps_to_max() {
+        let (_, client, admin, _, _) = setup_env();
+
+        client.set_referral_fee(&admin, &5000);
+        assert_eq!(client.get_referral_fee_bps(), 1000); // clamped to MAX
+    }
+
+    #[test]
+    fn test_set_referral_fee_clamps_negative_to_zero() {
+        let (_, client, admin, _, _) = setup_env();
+
+        client.set_referral_fee(&admin, &-100);
+        assert_eq!(client.get_referral_fee_bps(), 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "Error(Contract, #5)")]
+    fn test_set_referral_fee_non_admin_panics() {
+        let (env, client, _, _, _) = setup_env();
+        let impostor = Address::generate(&env);
+
+        client.set_referral_fee(&impostor, &800);
+    }
+
+    #[test]
+    fn test_default_referral_fee() {
+        let (_, client, _, _, _) = setup_env();
+        assert_eq!(client.get_referral_fee_bps(), 500); // default
+    }
+
+    #[test]
+    fn test_get_referred_tvl_unregistered() {
+        let (env, client, _, _, _) = setup_env();
+        let unknown = Address::generate(&env);
+        assert_eq!(client.get_referred_tvl(&unknown), 0);
+    }
+
+    #[test]
+    fn test_get_referral_rewards_unregistered() {
+        let (env, client, _, _, _) = setup_env();
+        let unknown = Address::generate(&env);
+        assert_eq!(client.get_referral_rewards(&unknown), 0);
     }
 }
 

@@ -15,6 +15,10 @@ import ConnectWalletButton from "./components/wallet/ConnectWalletButton";
 import NotificationBell from "./components/Navigation/NotificationBell";
 import Leaderboard from "./pages/leaderboard/Leaderboard";
 import OnRampModal from "./features/onramp/OnRampModal";
+import ClaimRewards from "./features/rewards/ClaimRewards";
+import PnLChart from "./features/pnl/PnLChart";
+import TaxExport from "./features/taxes/TaxExport";
+import ReferralDashboard from "./features/referrals/ReferralDashboard";
 import { useWallet } from "./context/useWallet";
 import { useState } from "react";
 import {
@@ -26,6 +30,10 @@ import {
   ShieldCheck,
   Trophy,
   CreditCard,
+  Gift,
+  DollarSign,
+  FileSpreadsheet,
+  Users,
 } from "lucide-react";
 import "./index.css";
 
@@ -109,6 +117,38 @@ const RootLayout = () => {
             <Trophy size={18} /> Leaderboard
           </Link>
           {isConnected && (
+            <Link
+              to="/rewards"
+              className="hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Gift size={18} /> Rewards
+            </Link>
+          )}
+          {isConnected && (
+            <Link
+              to="/pnl"
+              className="hover:text-white transition-colors flex items-center gap-2"
+            >
+              <DollarSign size={18} /> PnL
+            </Link>
+          )}
+          {isConnected && (
+            <Link
+              to="/taxes"
+              className="hover:text-white transition-colors flex items-center gap-2"
+            >
+              <FileSpreadsheet size={18} /> Tax Export
+            </Link>
+          )}
+          {isConnected && (
+            <Link
+              to="/referrals"
+              className="hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Users size={18} /> Referrals
+            </Link>
+          )}
+          {isConnected && (
             <button
               onClick={() => setIsOnRampOpen(true)}
               className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
@@ -169,6 +209,22 @@ const router = createBrowserRouter([
       {
         path: "/leaderboard",
         element: <Leaderboard />,
+      },
+      {
+        path: "/rewards",
+        element: <ClaimRewards />,
+      },
+      {
+        path: "/pnl",
+        element: <PnLChart />,
+      },
+      {
+        path: "/taxes",
+        element: <TaxExport />,
+      },
+      {
+        path: "/referrals",
+        element: <ReferralDashboard />,
       },
     ],
   },

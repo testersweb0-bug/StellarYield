@@ -12,6 +12,8 @@ import notificationsRouter from "./routes/notifications";
 import healthRouter from "./routes/health";
 import onrampRouter from "./routes/onramp";
 import zapRouter from "./routes/zap";
+import pnlRouter from "./routes/pnl";
+import exportRouter from "./routes/export";
 import {
   createAuthChallenge,
   verifyAuthChallenge,
@@ -70,6 +72,8 @@ export function createApp() {
   app.use("/api/health", healthRouter);
   app.use("/api/onramp", onrampRouter);
   app.use("/api/zap", zapRouter);
+  app.use("/api/users", pnlRouter);
+  app.use("/api/users", exportRouter);
 
   app.get("/api/events", async (req: Request, res: Response) => {
     void req;
