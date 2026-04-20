@@ -1,11 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::{DeltaNeutralStrategy, DeltaNeutralStrategyClient, StrategyError};
-    use soroban_sdk::{
-        contract, contractimpl,
-        testutils::{Address as _, Ledger},
-        token, Address, Env, IntoVal,
-    };
+    use soroban_sdk::{contract, contractimpl, testutils::Address as _, token, Address, Env};
 
     // ── Mock AMM Router ───────────────────────────────────────────────────
 
@@ -87,14 +83,17 @@ mod tests {
         }
     }
 
-    /// A mock oracle that returns a price 10% higher (for rebalance tests).
-    #[contract]
-    pub struct MockOracleHighPrice;
+    mod high_price_oracle {
+        use super::*;
 
-    #[contractimpl]
-    impl MockOracleHighPrice {
-        pub fn get_price(_env: Env, _asset: Address) -> i128 {
-            11_000_000_i128 // $1.10 — 10% above entry
+        #[contract]
+        pub struct MockOracleHighPrice;
+
+        #[contractimpl]
+        impl MockOracleHighPrice {
+            pub fn get_price(_env: Env, _asset: Address) -> i128 {
+                11_000_000_i128 // $1.10 — 10% above entry
+            }
         }
     }
 
@@ -311,7 +310,7 @@ mod tests {
         let amm = env.register(MockAmm, ());
         let perp = env.register(MockPerp, ());
         // Use high-price oracle to simulate a 10% price move
-        let oracle = env.register(MockOracleHighPrice, ());
+        let oracle = env.register(high_price_oracle::MockOracleHighPrice, ());
 
         client.initialize(&admin, &usdc, &spot, &amm, &perp, &oracle);
 
@@ -426,7 +425,7 @@ mod tests {
 
         let amm = env.register(MockAmm, ());
         let perp = env.register(MockPerp, ());
-        let oracle = env.register(MockOracleHighPrice, ());
+        let oracle = env.register(high_price_oracle::MockOracleHighPrice, ());
 
         client.initialize(&admin, &usdc, &spot, &amm, &perp, &oracle);
 

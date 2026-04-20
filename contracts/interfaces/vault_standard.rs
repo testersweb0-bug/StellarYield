@@ -23,6 +23,7 @@ use crate::VaultError;
 /// - Zero supply: first deposit mints shares 1:1 with assets
 /// - Zero amount: return 0 or error depending on context
 /// - Overflow: use checked arithmetic for all calculations
+#[allow(dead_code)]
 pub trait VaultStandard {
     /// Returns the total amount of underlying assets held by the vault.
     ///

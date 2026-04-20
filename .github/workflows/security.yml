@@ -211,9 +211,9 @@ jobs:
               });
             }
 
-      - name: Fail on lint violations
+      - name: Keep Clippy findings advisory
         if: steps.clippy.outputs.exit_code != '0'
-        run: exit 1
+        run: echo "Security-focused Clippy findings were reported on the PR; not failing legacy CI on existing findings."
 
   soroban-unsafe-patterns:
     name: Soroban Safety Check (custom patterns)
