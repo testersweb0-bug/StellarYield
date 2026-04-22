@@ -26,4 +26,3 @@ pub struct CDP {
 }
 
 pub const SCALAR_18: i128 = 1_000_000_000_000_000_000;
-pub const BPS_LIMIT: u32 = 10000;

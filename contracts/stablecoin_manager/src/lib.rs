@@ -12,7 +12,7 @@ mod storage;
 mod test;
 
 use math::{calculate_collateral_value, calculate_cr, calculate_debt, calculate_index};
-use storage::{DataKey, BPS_LIMIT, CDP, SCALAR_18};
+use storage::{DataKey, CDP, SCALAR_18};
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]

@@ -31,6 +31,7 @@ mod ve_yield {
     use soroban_sdk::{contractclient, Address, Env};
 
     #[contractclient(name = "VeYieldClient")]
+    #[allow(dead_code)]
     pub trait VeYieldInterface {
         fn get_voting_power(env: Env, user: Address) -> i128;
     }
