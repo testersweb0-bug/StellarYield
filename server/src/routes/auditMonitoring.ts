@@ -13,7 +13,7 @@ const auditMonitoringRouter = Router();
 /**
  * Admin authentication middleware
  */
-function requireAdmin(req: Request, res: Response, next: Function): void {
+function requireAdmin(req: Request, res: Response, next: () => void): void {
   const user = (req as Record<string, unknown>).user as
     | { role?: string }
     | undefined;
@@ -33,7 +33,7 @@ function requireAdmin(req: Request, res: Response, next: Function): void {
 auditMonitoringRouter.get(
   "/alerts",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { severity, type, limit } = req.query;
 
@@ -64,7 +64,7 @@ auditMonitoringRouter.get(
 auditMonitoringRouter.get(
   "/status",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const status = getMonitoringStatus();
 
@@ -90,7 +90,7 @@ auditMonitoringRouter.get(
 auditMonitoringRouter.get(
   "/report",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const report = await generateMonitoringReport();
 
@@ -116,7 +116,7 @@ auditMonitoringRouter.get(
 auditMonitoringRouter.get(
   "/export",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const data = await exportMonitoringData();
 
@@ -144,7 +144,7 @@ auditMonitoringRouter.get(
 auditMonitoringRouter.post(
   "/start",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const config = req.body;
       startAuditMonitoring(config);
@@ -172,7 +172,7 @@ auditMonitoringRouter.post(
 auditMonitoringRouter.post(
   "/stop",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       stopAuditMonitoring();
 
@@ -199,7 +199,7 @@ auditMonitoringRouter.post(
 auditMonitoringRouter.get(
   "/alerts/:severity",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { severity } = req.params;
       const { limit } = req.query;

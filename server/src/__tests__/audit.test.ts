@@ -15,9 +15,9 @@ describe("Audit Trail System", () => {
   let mockReq: Partial<Request>;
   let mockRes: Partial<Response>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Initialize audit log before each test
-    initializeAuditLog().catch(console.error);
+    await initializeAuditLog();
 
     mockReq = {
       method: "POST",

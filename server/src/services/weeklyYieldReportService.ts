@@ -157,9 +157,7 @@ export async function getSubscribedUsers(): Promise<UserYieldData[]> {
  * Get user vault yields
  * In production, calculate from actual transaction data
  */
-export async function getUserVaultYields(
-  userId: string,
-): Promise<VaultYieldData[]> {
+export async function getUserVaultYields(): Promise<VaultYieldData[]> {
   // Mock implementation - in production, query database and calculate
   return generateMockVaultYieldData();
 }
@@ -178,7 +176,7 @@ export async function generateWeeklyYieldReports(): Promise<
     if (!user.subscribed) continue;
 
     try {
-      const vaultYields = await getUserVaultYields(user.userId);
+      const vaultYields = await getUserVaultYields();
       const report = calculateWeeklyYieldReport(
         user,
         vaultYields,

@@ -19,7 +19,7 @@ const weeklyReportsRouter = Router();
 /**
  * Admin authentication middleware
  */
-function requireAdmin(req: Request, res: Response, next: Function): void {
+function requireAdmin(req: Request, res: Response, next: () => void): void {
   const user = (req as Record<string, unknown>).user as
     | { role?: string }
     | undefined;
@@ -39,7 +39,7 @@ function requireAdmin(req: Request, res: Response, next: Function): void {
 weeklyReportsRouter.get(
   "/",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { filterByActivity, limit } = req.query;
 
@@ -80,7 +80,7 @@ weeklyReportsRouter.get(
 weeklyReportsRouter.get(
   "/stats",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const reports = await generateWeeklyYieldReports();
       const statistics = getReportStatistics(reports);
@@ -112,7 +112,7 @@ weeklyReportsRouter.get(
 weeklyReportsRouter.get(
   "/export",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { filterByActivity } = req.query;
 
@@ -147,7 +147,7 @@ weeklyReportsRouter.get(
 weeklyReportsRouter.get(
   "/job/status",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const status = getJobStatus();
 
@@ -171,7 +171,7 @@ weeklyReportsRouter.get(
 weeklyReportsRouter.post(
   "/job/run",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await runWeeklyYieldReportJobNow();
 
@@ -195,7 +195,7 @@ weeklyReportsRouter.post(
 weeklyReportsRouter.post(
   "/job/start",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { schedule, sendEmails, filterByActivity } = req.body;
 
@@ -228,7 +228,7 @@ weeklyReportsRouter.post(
 weeklyReportsRouter.post(
   "/job/stop",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       stopWeeklyYieldReportJob();
 
@@ -254,7 +254,7 @@ weeklyReportsRouter.post(
 weeklyReportsRouter.get(
   "/:userId",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
 
@@ -287,7 +287,7 @@ weeklyReportsRouter.get(
  */
 weeklyReportsRouter.get(
   "/user/:userId/history",
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
       const { limit } = req.query;
@@ -318,30 +318,33 @@ weeklyReportsRouter.get(
  * Subscribe user to weekly reports
  * POST /api/weekly-reports/subscribe
  */
-weeklyReportsRouter.post("/subscribe", async (req: Request, res: Response) => {
-  try {
-    const { userId, email } = req.body;
+weeklyReportsRouter.post(
+  "/subscribe",
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId, email } = req.body;
 
-    if (!userId || !email) {
-      res.status(400).json({
-        error: "userId and email are required",
+      if (!userId || !email) {
+        res.status(400).json({
+          error: "userId and email are required",
+        });
+        return;
+      }
+
+      // In production, update user subscription in database
+      res.json({
+        success: true,
+        message: `User ${userId} subscribed to weekly reports`,
+        userId,
+        email,
       });
-      return;
+    } catch (error) {
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to subscribe",
+      });
     }
-
-    // In production, update user subscription in database
-    res.json({
-      success: true,
-      message: `User ${userId} subscribed to weekly reports`,
-      userId,
-      email,
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: error instanceof Error ? error.message : "Failed to subscribe",
-    });
-  }
-});
+  },
+);
 
 /**
  * Unsubscribe user from weekly reports
@@ -349,7 +352,7 @@ weeklyReportsRouter.post("/subscribe", async (req: Request, res: Response) => {
  */
 weeklyReportsRouter.post(
   "/unsubscribe",
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.body;
 

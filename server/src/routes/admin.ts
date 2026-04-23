@@ -12,7 +12,7 @@ const adminRouter = Router();
 /**
  * Admin authentication middleware (implement based on your auth system)
  */
-function requireAdmin(req: Request, res: Response, next: Function): void {
+function requireAdmin(req: Request, res: Response, next: () => void): void {
   const user = (req as Record<string, unknown>).user as
     | { role?: string }
     | undefined;
@@ -32,7 +32,7 @@ function requireAdmin(req: Request, res: Response, next: Function): void {
 adminRouter.post(
   "/vaults/:vaultId/parameters",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { vaultId } = req.params;
       const changes = req.body;
@@ -72,7 +72,7 @@ adminRouter.post(
 adminRouter.post(
   "/vaults/:vaultId/pause",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { vaultId } = req.params;
       const { reason } = req.body;
@@ -108,7 +108,7 @@ adminRouter.post(
 adminRouter.post(
   "/vaults/:vaultId/resume",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { vaultId } = req.params;
 
@@ -142,7 +142,7 @@ adminRouter.post(
 adminRouter.post(
   "/fees/config",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const changes = req.body;
 
@@ -178,7 +178,7 @@ adminRouter.post(
 adminRouter.post(
   "/risk/parameters",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const changes = req.body;
 
@@ -214,7 +214,7 @@ adminRouter.post(
 adminRouter.get(
   "/audit-logs",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId, action, resource, startDate, endDate, limit } = req.query;
 
@@ -250,7 +250,7 @@ adminRouter.get(
 adminRouter.get(
   "/audit-stats",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const stats = await getAuditStatistics();
 
@@ -276,7 +276,7 @@ adminRouter.get(
 adminRouter.get(
   "/audit-logs/export",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId, action, resource, startDate, endDate } = req.query;
 
@@ -312,7 +312,7 @@ adminRouter.get(
 adminRouter.get(
   "/audit-verify",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const logs = await getAuditLogs({ limit: 10000 });
       const verification = verifyAuditTrailIntegrity(logs);
@@ -344,7 +344,7 @@ adminRouter.get(
 adminRouter.post(
   "/users/:userId/revoke-access",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
       const { reason } = req.body;
@@ -383,7 +383,7 @@ adminRouter.post(
 adminRouter.post(
   "/users/:userId/grant-access",
   requireAdmin,
-  async (req: Request, res: Response) => {
+  async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = req.params;
       const { role, permissions } = req.body;
