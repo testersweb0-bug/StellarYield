@@ -6,6 +6,7 @@ import { predictApy, HistoricalDataPoint } from "./analytics/apyPredictor";
 import { signFeeBump } from "./relayer/relayer";
 import { context } from "./graphql/context";
 import { graphqlSchema } from "./graphql/schema";
+import { metricsMiddleware, getMetrics } from "./middleware/metrics";
 import yieldsRouter from "./routes/yields";
 import leaderboardRouter from "./routes/leaderboard";
 import notificationsRouter from "./routes/notifications";
@@ -15,6 +16,9 @@ import zapRouter from "./routes/zap";
 import pnlRouter from "./routes/pnl";
 import exportRouter from "./routes/export";
 import feesRouter from "./routes/fees";
+import transparencyRouter from "./routes/transparency";
+import donationsRouter from "./routes/donations";
+import referralsRouter from "./routes/referrals";
 import {
   createAuthChallenge,
   verifyAuthChallenge,
@@ -58,6 +62,7 @@ export function createApp() {
 
   app.use(cors());
   app.use(express.json());
+  app.use(metricsMiddleware);
   app.use(yoga.graphqlEndpoint, yoga);
 
   const relayerLimiter = rateLimit({
@@ -72,10 +77,15 @@ export function createApp() {
   app.use("/api/notifications", notificationsRouter);
   app.use("/api/health", healthRouter);
   app.use("/api/fees", feesRouter);
+  app.use("/api/transparency", transparencyRouter);
+  app.use("/api/donations", donationsRouter);
+  app.use("/api/referrals", referralsRouter);
   app.use("/api/onramp", onrampRouter);
   app.use("/api/zap", zapRouter);
   app.use("/api/users", pnlRouter);
   app.use("/api/users", exportRouter);
+
+  app.get("/api/metrics", getMetrics);
 
   app.get("/api/events", async (req: Request, res: Response) => {
     void req;

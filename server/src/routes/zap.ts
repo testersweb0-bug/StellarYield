@@ -1,7 +1,21 @@
 import { Router, Request, Response } from "express";
+import { getZapSupportedAssetsPayload } from "../config/zapAssetsConfig";
 import { getZapQuote, type ZapQuoteBody } from "../services/zapQuote";
 
 const router = Router();
+
+router.get("/supported-assets", (_req: Request, res: Response) => {
+  try {
+    res.json(getZapSupportedAssetsPayload());
+  } catch (error) {
+    res.status(503).json({
+      error:
+        error instanceof Error
+          ? error.message
+          : "Supported assets configuration is unavailable.",
+    });
+  }
+});
 
 router.post("/quote", async (req: Request, res: Response) => {
   try {

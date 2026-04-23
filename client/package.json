@@ -8,8 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test": "node ./node_modules/vitest/vitest.mjs run",
+    "test:coverage": "node ./node_modules/vitest/vitest.mjs run --coverage"
   },
   "dependencies": {
     "@albedo-link/intent": "^0.13.0",

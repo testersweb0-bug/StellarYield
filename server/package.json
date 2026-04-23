@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "dev": "ts-node-dev src/index.ts",
+    "dev": "ts-node-dev src/index.js",
     "build": "tsc",
     "lint": "eslint .",
     "test": "jest"
