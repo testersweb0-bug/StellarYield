@@ -228,7 +228,7 @@ describe('Encryption Utilities', () => {
 
     it('should generate IDs with correct prefix', () => {
       const id = generateContactId();
-      expect(id).toStartWith('contact_');
+      expect(id).toMatch(/^contact_/);
     });
   });
 
@@ -236,7 +236,7 @@ describe('Encryption Utilities', () => {
     it('should handle encryption errors gracefully', async () => {
       // Create an invalid key (this is a bit tricky to test in practice)
       // For now, we'll test with a null/undefined scenario
-      await expect(encryptContactData({ name: 'test', address: '0x123' }, null as any)).rejects.toThrow();
+      await expect(encryptContactData({ name: 'test', address: '0x123' }, null as unknown as CryptoKey)).rejects.toThrow();
     });
 
     it('should handle decryption errors gracefully', async () => {
