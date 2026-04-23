@@ -4,9 +4,8 @@ import {
   filterReportsWithActivity,
   getReportStatistics,
   exportReportsToCSV,
-  WeeklyYieldReport,
 } from "../services/weeklyYieldReportService";
-import { sendBatchEmails, EmailOptions } from "../services/emailService";
+import { sendBatchEmails } from "../services/emailService";
 
 /**
  * Weekly Yield Report Job
