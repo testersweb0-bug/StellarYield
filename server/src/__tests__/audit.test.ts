@@ -9,7 +9,6 @@ import {
   initializeAuditLog,
 } from "../middleware/audit";
 import { Request, Response } from "express";
-import crypto from "crypto";
 
 describe("Audit Trail System", () => {
   let mockReq: Partial<Request>;
@@ -369,7 +368,9 @@ describe("Audit Trail System", () => {
 
       setAuditContext(mockReq as Request, context);
 
-      expect((mockReq as any).auditContext).toEqual(context);
+      expect((mockReq as Record<string, unknown>).auditContext).toEqual(
+        context,
+      );
     });
   });
 

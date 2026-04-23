@@ -123,7 +123,7 @@ weeklyReportsRouter.get(
       }
 
       const csv = exportReportsToCSV(reports);
-      const { startDate, endDate } = getWeeklyDateRange();
+      const { startDate } = getWeeklyDateRange();
 
       res.setHeader("Content-Type", "text/csv");
       res.setHeader(

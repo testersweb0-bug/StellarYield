@@ -63,7 +63,7 @@ export async function initializeAuditLog(): Promise<void> {
         previousHash = lastEntry.hash;
         auditLog = lines.map((line) => JSON.parse(line));
       }
-    } catch (error) {
+    } catch {
       // File doesn't exist yet, start fresh
       previousHash = crypto
         .createHash("sha256")
@@ -195,7 +195,9 @@ export function verifyAuditEntry(entry: AuditLogEntry): boolean {
   const { hash, signature, ...entryData } = entry;
 
   // Verify hash
-  const calculatedHash = generateHash(entryData as any);
+  const calculatedHash = generateHash(
+    entryData as Omit<AuditLogEntry, "hash" | "signature">,
+  );
   if (calculatedHash !== hash) {
     return false;
   }

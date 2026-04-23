@@ -7,7 +7,7 @@ import { signFeeBump } from "./relayer/relayer";
 import { context } from "./graphql/context";
 import { graphqlSchema } from "./graphql/schema";
 import { metricsMiddleware, getMetrics } from "./middleware/metrics";
-import { auditMiddleware, initializeAuditLog } from "./middleware/audit";
+import { auditMiddleware } from "./middleware/audit";
 import yieldsRouter from "./routes/yields";
 import leaderboardRouter from "./routes/leaderboard";
 import notificationsRouter from "./routes/notifications";

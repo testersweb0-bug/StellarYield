@@ -282,7 +282,7 @@ export function startAuditMonitoring(config: AuditMonitoringConfig = {}): void {
       console.log("Running audit trail integrity check...");
       await checkAuditTrailIntegrity();
     });
-    monitoringJobs.push(integrityJob as any);
+    monitoringJobs.push(integrityJob as unknown as NodeJS.Timeout);
   }
 
   // Anomaly detection job (every 15 minutes)
@@ -291,7 +291,7 @@ export function startAuditMonitoring(config: AuditMonitoringConfig = {}): void {
       console.log("Running anomaly detection...");
       await detectAnomalies();
     });
-    monitoringJobs.push(anomalyJob as any);
+    monitoringJobs.push(anomalyJob as unknown as NodeJS.Timeout);
   }
 
   // Suspicious activity detection job (every 5 minutes)
@@ -300,7 +300,7 @@ export function startAuditMonitoring(config: AuditMonitoringConfig = {}): void {
       console.log("Running suspicious activity detection...");
       await detectSuspiciousActivity();
     });
-    monitoringJobs.push(suspiciousJob as any);
+    monitoringJobs.push(suspiciousJob as unknown as NodeJS.Timeout);
   }
 
   console.log(`Audit monitoring started with ${monitoringJobs.length} jobs`);
