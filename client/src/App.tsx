@@ -104,6 +104,14 @@ const RootLayout = () => {
           )}
           {isConnected && (
             <Link
+              to="/calculator"
+              className="hover:text-white transition-colors flex items-center gap-2"
+            >
+              <Calculator size={18} /> Calculator
+            </Link>
+          )}
+          {isConnected && (
+            <Link
               to="/governance"
               className="hover:text-white transition-colors flex items-center gap-2"
             >
@@ -223,6 +231,10 @@ const router = createBrowserRouter([
       {
         path: "/portfolio",
         element: <PortfolioPage />,
+      },
+      {
+        path: "/calculator",
+        element: <YieldCalculator />,
       },
       {
         path: "/governance",
