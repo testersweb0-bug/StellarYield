@@ -66,6 +66,32 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     clearStoredSession();
     setSession(null);
     setErrorMessage(null);
+
+    // Clear wallet-specific cached data and session state
+    window.localStorage.removeItem('authToken');
+    window.localStorage.removeItem('stellar_yield_google_oauth');
+    window.localStorage.removeItem('stellar_yield_google_sheets');
+
+    // Clear any in-flight pending transaction state or notifications
+    // by resetting browser's fetch/cache for wallet-dependent endpoints
+    if ('caches' in window) {
+      caches.keys().then(cacheNames => {
+        cacheNames.forEach(cacheName => {
+          caches.open(cacheName).then(cache => {
+            cache.keys().then(requests => {
+              requests.forEach(request => {
+                if (request.url.includes('/api/users/') ||
+                    request.url.includes('/api/rewards/') ||
+                    request.url.includes('/api/referrals/') ||
+                    request.url.includes('/api/yields/')) {
+                  cache.delete(request);
+                }
+              });
+            });
+          });
+        });
+      });
+    }
   }
 
   function clearError() {
