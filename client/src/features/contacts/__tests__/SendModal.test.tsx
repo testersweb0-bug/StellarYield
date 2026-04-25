@@ -8,6 +8,27 @@ import '@testing-library/jest-dom';
 import { SendModal } from '../components/SendModal';
 import { ContactSuggestion } from '../types';
 
+// Mock useContacts so AddressAutocomplete doesn't need a WalletProvider
+vi.mock('../hooks/useContacts', () => ({
+  useContacts: () => ({
+    contacts: [],
+    loading: false,
+    getSuggestions: vi.fn().mockResolvedValue([]),
+    setSearchQuery: vi.fn(),
+    clearError: vi.fn(),
+    refreshContacts: vi.fn(),
+    filteredContacts: [],
+    error: null,
+    searchQuery: '',
+    addContact: vi.fn(),
+    editContact: vi.fn(),
+    removeContact: vi.fn(),
+    search: vi.fn(),
+    validateContactData: vi.fn().mockReturnValue({ isValid: true, errors: [] }),
+    isDuplicate: vi.fn().mockReturnValue(false),
+  }),
+}));
+
 describe('SendModal', () => {
   const mockOnClose = vi.fn();
   const mockWalletAddress = '0x1234567890123456789012345678901234567890';

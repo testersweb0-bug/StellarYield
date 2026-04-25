@@ -17,6 +17,7 @@
  *   Content-Type:  image/png
  */
 
+import React from "react";
 import { ImageResponse } from "@vercel/og";
 import type { NextRequest } from "next/server";
 import { fetchVaultStats, formatTvl, VAULT_REGISTRY } from "../../lib/vaultData";

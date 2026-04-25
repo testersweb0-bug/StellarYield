@@ -60,7 +60,7 @@ export function AddressAutocomplete({
     try {
       const results = await getSuggestions(inputValue);
       setSuggestions(results);
-      setIsOpen(results.length > 0);
+      setIsOpen(true); // Always open dropdown when we have a query ≥ 2 chars
       setHighlightedIndex(-1);
     } catch (error) {
       console.error('Failed to get suggestions:', error);
@@ -189,12 +189,22 @@ export function AddressAutocomplete({
       </div>
 
       {/* Dropdown suggestions */}
-      {isOpen && suggestions.length > 0 && (
+      {isOpen && (
         <div
           ref={dropdownRef}
           className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto"
         >
-          {suggestions.map((suggestion, index) => (
+          {isSearching && (
+            <div className="px-4 py-3 text-gray-400 text-center">
+              <span className="animate-spin inline-block mr-2">⟳</span>Searching...
+            </div>
+          )}
+          {!isSearching && suggestions.length === 0 && (
+            <div className="px-4 py-3 text-gray-400 text-center">
+              No contacts found
+            </div>
+          )}
+          {!isSearching && suggestions.map((suggestion, index) => (
             <div
               key={suggestion.id}
               className={`px-4 py-3 cursor-pointer transition-colors ${
@@ -220,18 +230,11 @@ export function AddressAutocomplete({
           ))}
           
           {/* Show contacts count */}
-          <div className="px-4 py-2 text-xs text-gray-500 border-t border-slate-700">
-            {suggestions.length} contact{suggestions.length !== 1 ? 's' : ''} found
-          </div>
-        </div>
-      )}
-
-      {/* No results state */}
-      {isOpen && value.length >= 2 && suggestions.length === 0 && !isSearching && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-50">
-          <div className="px-4 py-3 text-gray-400 text-center">
-            No contacts found
-          </div>
+          {!isSearching && suggestions.length > 0 && (
+            <div className="px-4 py-2 text-xs text-gray-500 border-t border-slate-700">
+              {suggestions.length} contact{suggestions.length !== 1 ? 's' : ''} found
+            </div>
+          )}
         </div>
       )}
     </div>
