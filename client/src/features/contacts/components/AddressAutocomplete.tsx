@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, User, ChevronDown } from 'lucide-react';
 import { useContacts } from '../hooks/useContacts';
-import { ContactSuggestion } from '../types';
+import type { ContactSuggestion } from '../types';
 
 interface AddressAutocompleteProps {
   value: string;
@@ -32,8 +32,6 @@ export function AddressAutocomplete({
 }: AddressAutocompleteProps) {
   const {
     getSuggestions,
-    contacts,
-    loading,
   } = useContacts();
 
   const [isOpen, setIsOpen] = useState(false);

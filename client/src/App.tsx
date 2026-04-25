@@ -22,6 +22,7 @@ import ReferralDashboard from "./features/referrals/ReferralDashboard";
 import VestingDashboard from "./pages/vesting/VestingDashboard";
 import TransparencyDashboard from "./pages/transparency/TransparencyDashboard";
 import YieldForGood from "./features/donations/YieldForGood";
+import YieldCalculator from "./components/calculator/YieldCalculator";
 import { useWallet } from "./context/useWallet";
 import { useState } from "react";
 import {
@@ -42,6 +43,7 @@ import {
   Heart,
   Settings,
   Bell,
+  Calculator,
 } from "lucide-react";
 import "./index.css";
 import SettingsModal from "./features/settings/SettingsModal";

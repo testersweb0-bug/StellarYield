@@ -62,7 +62,9 @@ export default function ZapDepositPanel({ walletAddress }: ZapDepositPanelProps)
       !inputAsset ||
       !selectableAssets.some((a) => a.contractId === inputAsset.contractId)
     ) {
-      setInputAsset(selectableAssets[0] ?? null);
+      // Schedule the state update outside the synchronous effect body
+      const next = selectableAssets[0] ?? null;
+      Promise.resolve().then(() => setInputAsset(next));
     }
   }, [inputAsset, selectableAssets]);
 
@@ -70,6 +72,7 @@ export default function ZapDepositPanel({ walletAddress }: ZapDepositPanelProps)
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [txPhase, setTxPhase] = useState<TxPhase>("idle");
   const lastProgressPhaseRef = useRef<TxPhase>("idle");
+  const [lastProgressPhase, setLastProgressPhase] = useState<TxPhase>("idle");
   const [txHash, setTxHash] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -140,6 +143,7 @@ export default function ZapDepositPanel({ walletAddress }: ZapDepositPanelProps)
     setTxPhase(p);
     if (p !== "success" && p !== "failure") {
       lastProgressPhaseRef.current = p;
+      setLastProgressPhase(p);
     }
   }, []);
 
@@ -159,6 +163,7 @@ export default function ZapDepositPanel({ walletAddress }: ZapDepositPanelProps)
     }
 
     lastProgressPhaseRef.current = "idle";
+    setLastProgressPhase("idle");
     setTxPhase("idle");
     setTxHash(null);
     setStatus("loading");
@@ -196,6 +201,7 @@ export default function ZapDepositPanel({ walletAddress }: ZapDepositPanelProps)
     amount,
     minOut,
     emitPhase,
+    settings,
   ]);
 
   const retryZap = useCallback(() => {
@@ -332,8 +338,8 @@ export default function ZapDepositPanel({ walletAddress }: ZapDepositPanelProps)
         txHash={txHash}
         failedAtPhase={
           txPhase === "failure"
-            ? lastProgressPhaseRef.current !== "idle"
-              ? lastProgressPhaseRef.current
+            ? lastProgressPhase !== "idle"
+              ? lastProgressPhase
               : "polling"
             : null
         }
