@@ -18,7 +18,7 @@ const Leaderboard: React.FC = () => {
     fetch(apiUrl("/api/leaderboard"))
       .then((res) => res.json())
       .then((data) => {
-        setLeaderboard(data);
+        setLeaderboard(Array.isArray(data) ? data : data.items ?? []);
         setLoading(false);
       })
       .catch((err) => {

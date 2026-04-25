@@ -8,6 +8,8 @@ import { context } from "./graphql/context";
 import { graphqlSchema } from "./graphql/schema";
 import { metricsMiddleware, getMetrics } from "./middleware/metrics";
 import { auditMiddleware } from "./middleware/audit";
+import { requestContextMiddleware } from "./middleware/requestContext";
+import { errorHandler, requestLoggerMiddleware } from "./middleware/requestLogger";
 import yieldsRouter from "./routes/yields";
 import leaderboardRouter from "./routes/leaderboard";
 import notificationsRouter from "./routes/notifications";
@@ -65,6 +67,8 @@ export function createApp() {
 
   app.use(cors());
   app.use(express.json());
+  app.use(requestContextMiddleware);
+  app.use(requestLoggerMiddleware);
   app.use(metricsMiddleware);
   app.use(auditMiddleware);
   app.use(yoga.graphqlEndpoint, yoga);
@@ -162,6 +166,7 @@ export function createApp() {
     } catch (error) {
       res.status(400).json({
         error: error instanceof Error ? error.message : "Invalid auth request.",
+        requestId: (req as unknown as { requestId?: string }).requestId,
       });
     }
   });
@@ -175,9 +180,11 @@ export function createApp() {
           error instanceof Error
             ? error.message
             : "Invalid auth verification request.",
+        requestId: (req as unknown as { requestId?: string }).requestId,
       });
     }
   });
 
+  app.use(errorHandler);
   return app;
 }
