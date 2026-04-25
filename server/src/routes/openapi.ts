@@ -1,13 +1,20 @@
 import { Router, Request, Response } from "express";
 import path from "path";
 import fs from "fs";
+import rateLimit from "express-rate-limit";
 
 const router = Router();
+
+const docsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  message: "Too many API documentation requests. Please try again later.",
+});
 
 /**
  * Serve the OpenAPI specification in YAML format
  */
-router.get("/", (_req: Request, res: Response) => {
+router.get("/", docsLimiter, (_req: Request, res: Response) => {
   try {
     const specPath = path.join(__dirname, "../../openapi.yaml");
     const spec = fs.readFileSync(specPath, "utf-8");
@@ -21,7 +28,7 @@ router.get("/", (_req: Request, res: Response) => {
 /**
  * Serve a simple HTML page with Swagger UI for interactive API documentation
  */
-router.get("/docs", (_req: Request, res: Response) => {
+router.get("/docs", docsLimiter, (_req: Request, res: Response) => {
   const html = `
     <!DOCTYPE html>
     <html>
