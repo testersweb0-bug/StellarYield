@@ -7,6 +7,7 @@ import {
   verifyAuditTrailIntegrity,
 } from "../middleware/audit";
 import { uploadVaultMetadata } from "../services/ipfs/vaultMetadataService";
+import { freezeService } from "../services/freezeService";
 
 const adminRouter = Router();
 
@@ -480,6 +481,71 @@ adminRouter.post(
             ? error.message
             : "Failed to grant user access",
       });
+    }
+  },
+);
+
+/**
+ * Global or protocol-specific recommendation freeze
+ * POST /api/admin/recommendations/freeze
+ */
+adminRouter.post(
+  "/recommendations/freeze",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { protocol, reason } = req.body;
+      const actor = (req as unknown as { user?: { id: string } }).user?.id || "admin";
+
+      let state;
+      if (protocol) {
+        state = await freezeService.freezeProtocol(protocol, reason, actor);
+      } else {
+        state = await freezeService.freezeGlobal(reason, actor);
+      }
+
+      setAuditContext(req, {
+        action: "FREEZE_RECOMMENDATIONS",
+        resource: protocol ? "PROTOCOL" : "GLOBAL",
+        resourceId: protocol || "GLOBAL",
+        changes: { reason },
+      });
+
+      res.json({ success: true, state });
+    } catch {
+      res.status(500).json({ error: "Failed to freeze recommendations" });
+    }
+  },
+);
+
+/**
+ * Global or protocol-specific recommendation resume
+ * POST /api/admin/recommendations/resume
+ */
+adminRouter.post(
+  "/recommendations/resume",
+  requireAdmin,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { protocol } = req.body;
+      const actor = (req as unknown as { user?: { id: string } }).user?.id || "admin";
+
+      let state;
+      if (protocol) {
+        state = await freezeService.resumeProtocol(protocol, actor);
+      } else {
+        state = await freezeService.resumeGlobal(actor);
+      }
+
+      setAuditContext(req, {
+        action: "RESUME_RECOMMENDATIONS",
+        resource: protocol ? "PROTOCOL" : "GLOBAL",
+        resourceId: protocol || "GLOBAL",
+      });
+
+      res.json({ success: true, state });
+    } catch {
+      res.status(500).json({ error: "Failed to resume recommendations" });
     }
   },
 );

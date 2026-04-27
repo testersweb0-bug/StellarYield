@@ -142,3 +142,23 @@ model Contact {
   @@index([walletAddress, createdAt])
   @@unique([walletAddress, encryptedAddress]) // Prevent duplicates per user
 }
+
+// ── Risk Incident Models (#286) ───────────────────────────────────────────
+
+model Incident {
+  id              String   @id @default(uuid())
+  protocol        String   // protocol name (Blend, Soroswap, etc.)
+  severity        String   // LOW, MEDIUM, HIGH, CRITICAL
+  type            String   // PAUSE, ANOMALY, DEPEG, EXPLOIT, INTERVENTION
+  title           String
+  description     String
+  affectedVaults  String[] // Array of vault IDs/names
+  resolved        Boolean  @default(false)
+  startedAt       DateTime
+  resolvedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([protocol, severity])
+  @@index([startedAt])
+}

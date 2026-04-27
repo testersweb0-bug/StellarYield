@@ -21,6 +21,7 @@ import TaxExport from "./features/taxes/TaxExport";
 import ReferralDashboard from "./features/referrals/ReferralDashboard";
 import VestingDashboard from "./pages/vesting/VestingDashboard";
 import TransparencyDashboard from "./pages/transparency/TransparencyDashboard";
+import RiskChronology from "./pages/transparency/RiskChronology";
 import YieldForGood from "./features/donations/YieldForGood";
 import YieldCalculator from "./components/calculator/YieldCalculator";
 import { useWallet } from "./context/useWallet";
@@ -315,6 +316,10 @@ const router = createBrowserRouter([
       {
         path: "/transparency",
         element: <TransparencyDashboard />,
+      },
+      {
+        path: "/transparency/incidents",
+        element: <RiskChronology />,
       },
       {
         path: "/yield-for-good",

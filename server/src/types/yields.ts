@@ -1,3 +1,10 @@
+export interface ApyAttribution {
+  baseYield: number;
+  incentives: number;
+  compounding: number;
+  tacticalRotation: number;
+}
+
 export interface RawProtocolYield {
   protocolName: string;
   protocolType: "blend" | "soroswap";
@@ -8,6 +15,7 @@ export interface RawProtocolYield {
   network: "mainnet" | "testnet";
   source: string;
   fetchedAt: string;
+  attribution?: ApyAttribution;
 }
 
 export interface NormalizedYield {
@@ -17,4 +25,5 @@ export interface NormalizedYield {
   riskScore: number;
   source: string;
   fetchedAt: string;
+  attribution: ApyAttribution;
 }
