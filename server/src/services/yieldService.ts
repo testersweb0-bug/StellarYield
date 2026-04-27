@@ -2,6 +2,7 @@ import NodeCache from "node-cache";
 import { PROTOCOLS } from "../config/protocols";
 import { normalizeYields } from "../utils/yieldNormalization";
 import { fetchNetworkSnapshot } from "./stellarNetworkService";
+import { freezeService } from "./freezeService";
 import type { NormalizedYield, RawProtocolYield } from "../types/yields";
 
 const cache = new NodeCache({
@@ -46,10 +47,20 @@ function buildProtocolSnapshot(
     source: config.source,
     fetchedAt,
     rewards: config.rewardStreams,
+    attribution: {
+      baseYield: config.baseApyBps / 100 * 0.8,
+      incentives: config.baseApyBps / 100 * 0.1,
+      compounding: config.baseApyBps / 100 * 0.05,
+      tacticalRotation: config.baseApyBps / 100 * 0.05,
+    },
   };
 }
 
 export async function getYieldData(): Promise<NormalizedYield[]> {
+  if (freezeService.isFrozen()) {
+    return [];
+  }
+
   const cached = cache.get<NormalizedYield[]>(CACHE_KEY);
 
   if (cached) {

@@ -146,3 +146,38 @@ log "Writing $OUTPUT_FILE..."
 
 log "Done. Contract IDs written to $OUTPUT_FILE"
 cat "$OUTPUT_FILE"
+
+# ---------------------------------------------------------------------------
+# Update contracts/registry.json with deployed IDs (#185)
+# ---------------------------------------------------------------------------
+REGISTRY_FILE="$SCRIPT_DIR/../registry.json"
+NETWORK_KEY="testnet"
+if [[ "$STELLAR_NETWORK_PASSPHRASE" == *"mainnet"* ]] || [[ "$STELLAR_NETWORK_PASSPHRASE" == *"Public Global"* ]]; then
+  NETWORK_KEY="mainnet"
+elif [[ "$STELLAR_RPC_URL" == *"localhost"* ]] || [[ "$STELLAR_RPC_URL" == *"local"* ]]; then
+  NETWORK_KEY="local"
+fi
+
+# Map deploy contract names to registry keys
+declare -A REGISTRY_KEY_MAP=(
+  ["yield_vault"]="vault"
+  ["zap"]="zap"
+  ["strategies"]="strategy"
+  ["optimistic_governance"]="governance"
+  ["emission_controller"]="emissionController"
+  ["liquid_staking"]="liquidStaking"
+  ["stableswap"]="stableswap"
+)
+
+REGISTRY_UPDATES=()
+for contract in "${!DEPLOYED_IDS[@]}"; do
+  registry_key="${REGISTRY_KEY_MAP[$contract]:-$contract}"
+  REGISTRY_UPDATES+=(".${NETWORK_KEY}.${registry_key} = \"${DEPLOYED_IDS[$contract]}\"")
+done
+
+if [[ ${#REGISTRY_UPDATES[@]} -gt 0 && -f "$REGISTRY_FILE" ]]; then
+  JQ_FILTER=$(printf " | %s" "${REGISTRY_UPDATES[@]}")
+  JQ_FILTER="${JQ_FILTER:3}" # strip leading " | "
+  jq "$JQ_FILTER" "$REGISTRY_FILE" > "$REGISTRY_FILE.tmp" && mv "$REGISTRY_FILE.tmp" "$REGISTRY_FILE"
+  log "Registry updated at $REGISTRY_FILE (network: $NETWORK_KEY)"
+fi

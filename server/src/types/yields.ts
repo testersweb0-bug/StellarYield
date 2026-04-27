@@ -2,6 +2,11 @@ export interface RewardStream {
   tokenSymbol: string;
   emissionPerYear: number;
   tokenPrice: number;
+export interface ApyAttribution {
+  baseYield: number;
+  incentives: number;
+  compounding: number;
+  tacticalRotation: number;
 }
 
 export interface RawProtocolYield {
@@ -15,6 +20,7 @@ export interface RawProtocolYield {
   source: string;
   fetchedAt: string;
   rewards?: RewardStream[];
+  attribution?: ApyAttribution;
 }
 
 export interface NormalizedYield {
@@ -30,4 +36,5 @@ export interface NormalizedYield {
     symbol: string;
     apy: number;
   }[];
+  attribution: ApyAttribution;
 }
