@@ -22,6 +22,12 @@ jest.mock("@stellar/stellar-sdk", () => {
   }));
   const mockGetNetwork = jest.fn().mockResolvedValue({ passphrase: "Test SDF Network ; September 2015" });
   return {
+    // Networks must be present so relayer.ts (imported via app.ts) can
+    // access StellarSdk.Networks.TESTNET without throwing.
+    Networks: {
+      TESTNET: "Test SDF Network ; September 2015",
+      PUBLIC: "Public Global Stellar Network ; September 2015",
+    },
     Horizon: { Server: jest.fn(() => ({ ledgers: mockLedgers })) },
     rpc: { Server: jest.fn(() => ({ getNetwork: mockGetNetwork })) },
   };
